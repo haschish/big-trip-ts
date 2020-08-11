@@ -6,32 +6,39 @@ import {createDayTemplate} from './components/day'
 import {createEventTemplate} from './components/event'
 import {createEventFormTemplate} from './components/event-form'
 import {createTripInfoTemplate} from './components/trip-info'
+import {generate, getTotal} from './data'
+import {render} from './util'
 
+const data = generate(15)
+const totalData = getTotal(data)
 
-const render = (container: Element | null | undefined, template: string, place: InsertPosition = `beforeend` ) => {
-  container?.insertAdjacentHTML(place, template);
-};
+const tripMainElement = document.querySelector(`.trip-main`)
+const mainElement = document.querySelector(`.page-main`)
 
-const tripMainElement = document.querySelector(`.trip-main`);
-const mainElement = document.querySelector(`.page-main`);
+render(tripMainElement, createTripInfoTemplate(totalData), `afterbegin`)
 
-render(tripMainElement, createTripInfoTemplate(), `afterbegin`);
+const tripControlsElement = tripMainElement?.querySelector(`.trip-controls`)
+tripControlsElement!.innerHTML = ``
+render(tripControlsElement, createMenuTemplate())
+render(tripControlsElement, createFilterTemplate())
 
-const tripControlsElement = tripMainElement?.querySelector(`.trip-controls`);
-tripControlsElement!.innerHTML = ``;
-render(tripControlsElement, createMenuTemplate());
-render(tripControlsElement, createFilterTemplate());
+const tripEventsElement = mainElement?.querySelector(`.trip-events`)
+render(tripEventsElement, createSortTemplate())
+render(tripEventsElement, createEventFormTemplate(data[0]))
+render(tripEventsElement, createDaysTemplate())
 
-const tripEventsElement = mainElement?.querySelector(`.trip-events`);
-render(tripEventsElement, createSortTemplate());
-render(tripEventsElement, createEventFormTemplate());
-render(tripEventsElement, createDaysTemplate());
+const daysElement = mainElement?.querySelector(`.trip-days`)
 
-const daysElement = mainElement?.querySelector(`.trip-days`);
-render(daysElement, createDayTemplate());
-
-const eventListElement = daysElement?.querySelector(`.trip-events__list`);
-for (let i = 0; i < 3; i++) {
-  render(eventListElement, createEventTemplate());
+let prevPoint = null
+let counterDay = 0
+let eventListElement = null
+for (const point of data) {
+  if (prevPoint === null || point.timeStart.getDate() !== prevPoint.timeStart.getDate()) {
+    counterDay += 1
+    render(daysElement, createDayTemplate(counterDay, point.timeStart))
+    const dayElement = daysElement?.querySelector('.day:last-child')
+    eventListElement = dayElement?.querySelector(`.trip-events__list`)
+  }
+  prevPoint = point
+  render(eventListElement, createEventTemplate(point))
 }
-
