@@ -115,9 +115,10 @@ export const createEventFormTemplate = (point: Point) => {
 
 export default class EventFormView {
   private element: Element | null = null;
+  private listeners: EventListener[] = [];
 
   constructor(private point: Point) {
-
+    this.onSubmit = this.onSubmit.bind(this);
   }
 
   private getTemlate() {
@@ -127,11 +128,24 @@ export default class EventFormView {
   getElement() {
     if (!this.element) {
       this.element = createElement(this.getTemlate())
+      this.element?.addEventListener('submit', this.onSubmit)
     }
     return this.element
   }
 
   removeElement() {
+    this.element?.removeEventListener('submit', this.onSubmit)
     this.element = null
+  }
+
+  addSubmitListener(fn: EventListener) {
+    this.listeners.push(fn);
+  }
+
+  private onSubmit(evt: Event) {
+    evt.preventDefault();
+    for (const fn of this.listeners) {
+      fn(evt);
+    }
   }
 }
