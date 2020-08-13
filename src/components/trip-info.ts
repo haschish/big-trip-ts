@@ -1,4 +1,5 @@
 import {Total} from '../data'
+import {createElement} from '../util'
 
 const getDateRange = (start: Date, end: Date): string => {
   const optionsStart = { month: 'short', day: 'numeric' };
@@ -8,6 +9,7 @@ const getDateRange = (start: Date, end: Date): string => {
 
   return `${from}&nbsp;&mdash;&nbsp;${to}`;
 }
+
 
 export const createTripInfoTemplate = (data: Total) => {
   return `
@@ -23,3 +25,28 @@ export const createTripInfoTemplate = (data: Total) => {
     </p>
   </section>`
 }
+
+export default class TripInfo {
+  private element: Element | null = null;
+
+  constructor(private data: Total) {
+  }
+
+  private getTemplate() {
+    return createTripInfoTemplate(this.data)
+  }
+
+  getElement() {
+    if (!this.element) {
+      this.element = createElement(this.getTemplate())
+    }
+    return this.element
+  }
+
+  removeElement() {
+    this.element = null;
+  }
+}
+
+
+

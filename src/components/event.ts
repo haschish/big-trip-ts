@@ -1,5 +1,5 @@
 import {Point, Offer, getPrepositionForType} from '../data';
-import {upperFirst} from '../util'
+import {upperFirst, createElement} from '../util'
 
 const getTitle = (point: Point): string => {
   const preposition = getPrepositionForType(point.type)
@@ -28,7 +28,7 @@ const getOffersTemplate = (offers: Offer[]): string => {
   `).join('');
 }
 
-export const createEventTemplate = (point: Point) => {
+const createEventTemplate = (point: Point) => {
   const {timeStart, timeEnd} = point;
   const offersTemplate = getOffersTemplate(point.offers);
 
@@ -62,4 +62,40 @@ export const createEventTemplate = (point: Point) => {
       </button>
     </div>
   </li>`
+}
+
+export default class EventView {
+  private element: Element | null = null
+  private listeners: EventListener[] = []
+
+  constructor(private point: Point) {
+    this.onClickRollUp = this.onClickRollUp.bind(this)
+  }
+
+  private getTemlate() {
+    return createEventTemplate(this.point)
+  }
+
+  getElement() {
+    if (!this.element) {
+      this.element = createElement(this.getTemlate())
+      this.element?.querySelector('.event__rollup-btn')?.addEventListener('click', this.onClickRollUp)
+    }
+    return this.element
+  }
+
+  removeElement() {
+    this.element?.querySelector('.event__rollup-btn')?.removeEventListener('click', this.onClickRollUp)
+    this.element = null
+  }
+
+  addClickRollUpListener(fn: EventListener) {
+    this.listeners.push(fn);
+  }
+
+  private onClickRollUp(evt: Event) {
+    for (const fn of this.listeners) {
+      fn(evt)
+    }
+  }
 }

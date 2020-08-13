@@ -1,5 +1,7 @@
-export const createSortTemplate = () => (
-  `<form class="trip-events__trip-sort  trip-sort" action="#" method="get">
+import {createElement} from '../util'
+
+const createSortTemplate = () => `
+  <form class="trip-events__trip-sort  trip-sort" action="#" method="get">
     <span class="trip-sort__item  trip-sort__item--day">Day</span>
 
     <div class="trip-sort__item  trip-sort__item--event">
@@ -29,4 +31,22 @@ export const createSortTemplate = () => (
 
     <span class="trip-sort__item  trip-sort__item--offers">Offers</span>
   </form>`
-)
+
+export default class Sort {
+  private element: Element | null = null;
+
+  private getTemlate() {
+    return createSortTemplate()
+  }
+
+  getElement() {
+    if (!this.element) {
+      this.element = createElement(this.getTemlate())
+    }
+    return this.element
+  }
+
+  removeElement() {
+    this.element = null
+  }
+}

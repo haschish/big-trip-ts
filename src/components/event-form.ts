@@ -1,5 +1,5 @@
 import {Point, getPrepositionForType, transferTypes, activityTypes, Offer} from '../data'
-import {upperFirst, formatDatetime, getChecked} from '../util'
+import {upperFirst, formatDatetime, getChecked, createElement} from '../util'
 
 const getTypeList = (list: string[], type: string) => {
   return list.map((it) => `
@@ -111,4 +111,27 @@ export const createEventFormTemplate = (point: Point) => {
       </section>
     </section>
   </form>`
+}
+
+export default class EventFormView {
+  private element: Element | null = null;
+
+  constructor(private point: Point) {
+
+  }
+
+  private getTemlate() {
+    return createEventFormTemplate(this.point)
+  }
+
+  getElement() {
+    if (!this.element) {
+      this.element = createElement(this.getTemlate())
+    }
+    return this.element
+  }
+
+  removeElement() {
+    this.element = null
+  }
 }

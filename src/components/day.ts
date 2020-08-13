@@ -1,4 +1,6 @@
-export const createDayTemplate = (counter: number, date: Date) => {
+import {createElement} from '../util'
+
+const createDayTemplate = (counter: number, date: Date) => {
   const dayDate = date.toLocaleDateString('en-US', {month: 'short', day: 'numeric'})
 
   return `
@@ -11,4 +13,27 @@ export const createDayTemplate = (counter: number, date: Date) => {
     <ul class="trip-events__list">
     </ul>
   </li>`
+}
+
+export default class Day {
+  private element: Element | null = null;
+
+  constructor(private counter: number, private date: Date) {
+
+  }
+
+  private getTemlate() {
+    return createDayTemplate(this.counter, this.date)
+  }
+
+  getElement() {
+    if (!this.element) {
+      this.element = createElement(this.getTemlate())
+    }
+    return this.element
+  }
+
+  removeElement() {
+    this.element = null
+  }
 }
