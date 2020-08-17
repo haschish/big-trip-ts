@@ -1,4 +1,4 @@
-import {createElement} from '../util'
+import View from './view'
 
 const createDayTemplate = (counter: number, date: Date) => {
   const dayDate = date.toLocaleDateString('en-US', {month: 'short', day: 'numeric'})
@@ -15,25 +15,16 @@ const createDayTemplate = (counter: number, date: Date) => {
   </li>`
 }
 
-export default class Day {
-  private element: Element | null = null;
-
+export default class Day extends View {
   constructor(private counter: number, private date: Date) {
-
+    super()
   }
 
-  private getTemlate() {
+  protected getTemplate(): string {
     return createDayTemplate(this.counter, this.date)
   }
 
-  getElement() {
-    if (!this.element) {
-      this.element = createElement(this.getTemlate())
-    }
-    return this.element
-  }
-
-  removeElement() {
-    this.element = null
+  getEventsList() {
+    return this.element?.querySelector('.trip-events__list')
   }
 }

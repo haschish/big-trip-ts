@@ -1,4 +1,4 @@
-import {createElement} from '../util'
+import View from './view'
 
 const createMenuTemplate = () => `
   <div>
@@ -9,21 +9,8 @@ const createMenuTemplate = () => `
     </nav>
   </div>`
 
-export default class Menu {
-  private element: Element | null = null;
-
-  private getTemplate() {
+export default class Menu extends View {
+  protected getTemplate() {
     return createMenuTemplate()
-  }
-
-  getElement() {
-    if (!this.element) {
-      this.element = createElement(this.getTemplate())
-    }
-    return this.element
-  }
-
-  removeElement() {
-    this.element = null
   }
 }

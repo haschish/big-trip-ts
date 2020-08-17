@@ -1,25 +1,12 @@
-import {createElement} from '../util'
+import View from './view'
 
 const createDaysTemplate = () => (
   `<ul class="trip-days">
   </ul>`
 )
 
-export default class Days {
-  private element: Element | null = null;
-
-  private getTemlate() {
+export default class Days extends View {
+  protected getTemplate() {
     return createDaysTemplate()
-  }
-
-  getElement() {
-    if (!this.element) {
-      this.element = createElement(this.getTemlate())
-    }
-    return this.element
-  }
-
-  removeElement() {
-    this.element = null
   }
 }

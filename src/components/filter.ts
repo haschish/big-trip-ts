@@ -1,4 +1,4 @@
-import {createElement} from '../util'
+import View from './view'
 
 const createFilterTemplate = () => `
   <div>
@@ -23,21 +23,8 @@ const createFilterTemplate = () => `
     </form>
   </div>`
 
-export default class Filter {
-  private element: Element | null = null;
-
-  private getTemlate() {
+export default class Filter extends View {
+  protected getTemplate() {
     return createFilterTemplate()
-  }
-
-  getElement() {
-    if (!this.element) {
-      this.element = createElement(this.getTemlate())
-    }
-    return this.element
-  }
-
-  removeElement() {
-    this.element = null
   }
 }

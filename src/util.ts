@@ -1,3 +1,4 @@
+import View from './components/view'
 export const upperFirst = (str: string) => (str.length > 0) ? str.charAt(0).toUpperCase() + str.slice(1) : ''
 
 export const formatDatetime = (date: Date) => {
@@ -12,8 +13,20 @@ export const formatDatetime = (date: Date) => {
 
 export const getChecked = (value: boolean) => value ? 'checked' : '';
 
-export const render = (container: Element | null, template: string, place: InsertPosition = `beforeend` ) => {
-  container?.insertAdjacentHTML(place, template)
+export const render = (container: Element | View, view: View, place: InsertPosition = `beforeend` ) => {
+  if (container instanceof View) {
+    container.getElement()!.insertAdjacentElement(place, view.getElement()!)
+  } else {
+    container.insertAdjacentElement(place, view.getElement()!)
+  }
+}
+
+export const replace = (container: Element | View, newChild: View, oldChild: View) => {
+  if (container instanceof View) {
+    container.getElement()?.replaceChild(newChild.getElement()!, oldChild.getElement()!)
+  } else {
+    container.replaceChild(newChild.getElement()!, oldChild.getElement()!)
+  }
 }
 
 export enum Position {

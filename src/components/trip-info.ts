@@ -1,5 +1,6 @@
 import {Total} from '../data'
 import {createElement} from '../util'
+import View from './view'
 
 const getDateRange = (start: Date, end: Date): string => {
   const optionsStart = { month: 'short', day: 'numeric' };
@@ -26,25 +27,13 @@ export const createTripInfoTemplate = (data: Total) => {
   </section>`
 }
 
-export default class TripInfo {
-  private element: Element | null = null;
-
+export default class TripInfo extends View {
   constructor(private data: Total) {
+    super()
   }
 
-  private getTemplate() {
+  protected getTemplate() {
     return createTripInfoTemplate(this.data)
-  }
-
-  getElement() {
-    if (!this.element) {
-      this.element = createElement(this.getTemplate())
-    }
-    return this.element
-  }
-
-  removeElement() {
-    this.element = null;
   }
 }
 

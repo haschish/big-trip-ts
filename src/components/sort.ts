@@ -1,4 +1,4 @@
-import {createElement} from '../util'
+import View from './view'
 
 const createSortTemplate = () => `
   <form class="trip-events__trip-sort  trip-sort" action="#" method="get">
@@ -32,21 +32,8 @@ const createSortTemplate = () => `
     <span class="trip-sort__item  trip-sort__item--offers">Offers</span>
   </form>`
 
-export default class Sort {
-  private element: Element | null = null;
-
-  private getTemlate() {
+export default class Sort extends View {
+  protected getTemplate() {
     return createSortTemplate()
-  }
-
-  getElement() {
-    if (!this.element) {
-      this.element = createElement(this.getTemlate())
-    }
-    return this.element
-  }
-
-  removeElement() {
-    this.element = null
   }
 }

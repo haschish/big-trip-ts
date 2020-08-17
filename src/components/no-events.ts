@@ -1,20 +1,7 @@
-import {createElement} from '../util'
+import View from './view'
 
-export default class NoEvents {
-  private element: Element | null = null;
-
-  private getTemlate() {
+export default class NoEvents extends View {
+  protected getTemplate() {
     return `<p class="trip-events__msg">Click New Event to create your first point</p>`
-  }
-
-  getElement() {
-    if (!this.element) {
-      this.element = createElement(this.getTemlate())
-    }
-    return this.element
-  }
-
-  removeElement() {
-    this.element = null
   }
 }
