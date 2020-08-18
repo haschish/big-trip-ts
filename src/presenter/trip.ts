@@ -1,6 +1,6 @@
 import {Point} from '../data'
 import View from '../components/view'
-import Sort from '../components/sort'
+import Sort, {SortType} from '../components/sort'
 import Days from '../components/days'
 import Day from '../components/day'
 import NoEvents from '../components/no-events'
@@ -10,37 +10,74 @@ import {render, replace} from '../util'
 
 export default class Trip {
   private data: Point[] = []
+  private sortedData: Point[] = []
   private sortView: Sort = new Sort()
   private daysView: Days = new Days()
-	constructor(private container: Element) {
 
+	constructor(private container: Element) {
+    this.onSortChange = this.onSortChange.bind(this);
+    this.sortView.addChangeListener(this.onSortChange)
+  }
+
+  private onSortChange() {
+    this.update()
   }
 
   init(data: Point[]) {
     this.data = data.slice()
 
-    if (data.length > 0) {
-      this.renderPoints()
+    this.update()
+  }
+
+  private update() {
+    this.container.innerHTML = ''
+    if (this.data.length > 0) {
+      render(this.container, this.sortView)
+      render(this.container, this.daysView)
+      this.daysView.clear()
+
+      const sortType = this.sortView.getSelected() || SortType.Event
+      this.sortData(sortType)
+      this.renderPoints(sortType)
     } else {
       this.renderNoPoints()
     }
   }
 
-  private renderPoints() {
-    render(this.container, this.sortView)
-    render(this.container, this.daysView)
+  private sortData(type: string) {
+    switch (type) {
+      case SortType.Event:
+        this.sortedData = this.data.slice()
+        break
+      case SortType.Time:
+        this.sortedData = this.data.slice().sort((a, b) => (b.timeEnd.getTime() - b.timeStart.getTime()) - (a.timeEnd.getTime() - a.timeStart.getTime()))
+        break
+      case SortType.Price:
+        this.sortedData = this.data.slice().sort((a, b) => b.price - a.price)
+        break
+    }
+  }
 
-    let prevPoint = null
-    let counterDay = 0
-    let dayView: Day | null = null
-    for (const point of this.data) {
-      if (prevPoint === null || point.timeStart.getDate() !== prevPoint.timeStart.getDate()) {
-        counterDay += 1
-        dayView = new Day(counterDay, point.timeStart)
-        render(this.daysView, dayView)
+  private renderPoints(type: string) {
+    let dayView: Day = new Day();
+
+    if (type !== SortType.Event) {
+      render(this.daysView, dayView)
+      for (const point of this.sortedData) {
+        this.renderPoint(dayView, point);
       }
-      prevPoint = point
-      this.renderPoint(dayView!, point);
+    } else {
+      let prevPoint: Point | null = null
+      let counterDay = 0
+      for (const point of this.sortedData) {
+        if (prevPoint === null || point.timeStart.getDate() !== prevPoint.timeStart.getDate()) {
+          counterDay += 1
+          dayView = new Day(counterDay, point.timeStart)
+          render(this.daysView, dayView)
+        }
+        prevPoint = point
+        this.renderPoint(dayView!, point);
+      }
     }
   }
 

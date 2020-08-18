@@ -8,11 +8,19 @@ export default abstract class View {
   getElement() {
     if (!this.element) {
       this.element = createElement(this.getTemplate())
+      this.addListeners()
     }
     return this.element
   }
 
   removeElement() {
+    this.removeListeners()
     this.element = null
+  }
+
+  protected addListeners() {
+  }
+
+  protected removeListeners() {
   }
 }

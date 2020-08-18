@@ -9,4 +9,10 @@ export default class Days extends View {
   protected getTemplate() {
     return createDaysTemplate()
   }
+
+  clear() {
+    if (this.element) {
+      this.element.innerHTML = ''
+    }
+  }
 }
