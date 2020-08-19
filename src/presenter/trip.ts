@@ -1,12 +1,10 @@
 import {Point} from '../data'
-import View from '../components/view'
+import PointPresenter from './point'
 import Sort, {SortType} from '../components/sort'
 import Days from '../components/days'
 import Day from '../components/day'
 import NoEvents from '../components/no-events'
-import EventView from '../components/event'
-import EventFormView from '../components/event-form'
-import {render, replace} from '../util'
+import {render} from '../util'
 
 export default class Trip {
   private data: Point[] = []
@@ -86,36 +84,8 @@ export default class Trip {
   }
 
   private renderPoint(dayView: Day, point: Point) {
-    const eventView = new EventView(point);
-    const eventFormView = new EventFormView(point);
     const eventsListElement = dayView.getEventsList()
-
-    const onDocumentKeydown = (evt: KeyboardEvent) => {
-      if (evt.key === 'Escape') {
-        replaceFormToEvent();
-      }
-    }
-
-    const replaceEventToForm = () => {
-      replace(eventsListElement!, eventFormView, eventView)
-      eventView.removeElement();
-      document.addEventListener('keydown', onDocumentKeydown)
-    }
-
-    const replaceFormToEvent = () => {
-      replace(eventsListElement!, eventView, eventFormView)
-      eventFormView.removeElement();
-      document.removeEventListener('keydown', onDocumentKeydown)
-    }
-
-    eventView.addClickRollUpListener(() => {
-      replaceEventToForm();
-    })
-
-    eventFormView.addSubmitListener(() => {
-      replaceFormToEvent();
-    })
-
-    render(eventsListElement!, eventView)
+    const pp = new PointPresenter(eventsListElement!, point)
+    pp.render();
   }
 }
