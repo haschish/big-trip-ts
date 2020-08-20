@@ -8,12 +8,13 @@ import {render} from '../util'
 
 export default class Trip {
   private data: Point[] = []
-  private sortedData: Point[] = []
   private sortView: Sort = new Sort()
   private daysView: Days = new Days()
+  private pointPreseters: Map<string, PointPresenter> = new Map()
 
 	constructor(private container: Element) {
-    this.onSortChange = this.onSortChange.bind(this);
+    this.onSortChange = this.onSortChange.bind(this)
+    this.onUpdatePoint = this.onUpdatePoint.bind(this)
     this.sortView.addChangeListener(this.onSortChange)
   }
 
@@ -45,13 +46,13 @@ export default class Trip {
   private sortData(type: string) {
     switch (type) {
       case SortType.Event:
-        this.sortedData = this.data.slice()
+        this.data.sort((a, b) => a.timeStart.getTime() - b.timeStart.getTime())
         break
       case SortType.Time:
-        this.sortedData = this.data.slice().sort((a, b) => (b.timeEnd.getTime() - b.timeStart.getTime()) - (a.timeEnd.getTime() - a.timeStart.getTime()))
+        this.data.sort((a, b) => (b.timeEnd.getTime() - b.timeStart.getTime()) - (a.timeEnd.getTime() - a.timeStart.getTime()))
         break
       case SortType.Price:
-        this.sortedData = this.data.slice().sort((a, b) => b.price - a.price)
+        this.data.sort((a, b) => b.price - a.price)
         break
     }
   }
@@ -61,13 +62,13 @@ export default class Trip {
 
     if (type !== SortType.Event) {
       render(this.daysView, dayView)
-      for (const point of this.sortedData) {
+      for (const point of this.data) {
         this.renderPoint(dayView, point);
       }
     } else {
       let prevPoint: Point | null = null
       let counterDay = 0
-      for (const point of this.sortedData) {
+      for (const point of this.data) {
         if (prevPoint === null || point.timeStart.getDate() !== prevPoint.timeStart.getDate()) {
           counterDay += 1
           dayView = new Day(counterDay, point.timeStart)
@@ -85,7 +86,15 @@ export default class Trip {
 
   private renderPoint(dayView: Day, point: Point) {
     const eventsListElement = dayView.getEventsList()
-    const pp = new PointPresenter(eventsListElement!, point)
-    pp.render();
+    const pp = new PointPresenter(eventsListElement!, point, this.onUpdatePoint)
+    pp.render()
+    this.pointPreseters.set(point.id, pp)
+  }
+
+  private onUpdatePoint(newPoint: Point) {
+    const index = this.data.findIndex((point) => point.id === newPoint.id)
+
+    this.data = [...this.data.slice(0, index), newPoint, ...this.data.slice(index + 1)]
+    this.pointPreseters.get(newPoint.id)?.update(newPoint)
   }
 }

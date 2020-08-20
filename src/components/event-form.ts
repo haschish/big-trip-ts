@@ -5,23 +5,25 @@ import View from './view'
 const getTypeList = (list: string[], type: string) => {
   return list.map((it) => `
     <div class="event__type-item">
-      <input id="event-type-taxi-1" class="event__type-input  visually-hidden" type="radio" name="event-type" value="${it}" ${getChecked(type === it)}>
-      <label class="event__type-label  event__type-label--${it}" for="event-type-taxi-1">${upperFirst(it)}</label>
+      <input id="event-type-${it}" class="event__type-input  visually-hidden" type="radio" name="event-type" value="${it}" ${getChecked(type === it)}>
+      <label class="event__type-label  event__type-label--${it}" for="event-type-${it}">${upperFirst(it)}</label>
     </div>
   `).join('')
 }
 
 const getOffersTemplate = (offers: Offer[]) => {
-  return offers.map(offer => `
-    <div class="event__offer-selector">
-      <input class="event__offer-checkbox  visually-hidden" id="event-offer-luggage-1" type="checkbox" name="event-offer-luggage" ${getChecked(offer.checked)}>
-      <label class="event__offer-label" for="event-offer-luggage-1">
-        <span class="event__offer-title">${offer.title}</span>
-        &plus;
-        &euro;&nbsp;<span class="event__offer-price">${offer.price}</span>
-      </label>
-    </div>
-  `).join('')
+  return offers.map(offer => {
+    const index = offers.indexOf(offer)
+    return `
+      <div class="event__offer-selector">
+        <input class="event__offer-checkbox  visually-hidden" id="event-offer-luggage-${index}" data-index="${index}" type="checkbox" name="event-offer-luggage" ${getChecked(offer.checked)}>
+        <label class="event__offer-label" for="event-offer-luggage-${index}">
+          <span class="event__offer-title">${offer.title}</span>
+          &plus;
+          &euro;&nbsp;<span class="event__offer-price">${offer.price}</span>
+        </label>
+      </div>`
+  }).join('')
 }
 
 const getPhotosTemplate = (photos: string[]): string => {
@@ -90,6 +92,18 @@ export const createEventFormTemplate = (point: Point) => {
 
       <button class="event__save-btn  btn  btn--blue" type="submit">Save</button>
       <button class="event__reset-btn" type="reset">Cancel</button>
+
+      <input id="event-favorite-1" class="event__favorite-checkbox  visually-hidden" type="checkbox" name="event-favorite" checked>
+      <label class="event__favorite-btn" for="event-favorite-1">
+        <span class="visually-hidden">Add to favorite</span>
+        <svg class="event__favorite-icon" width="28" height="28" viewBox="0 0 28 28">
+          <path d="M14 21l-8.22899 4.3262 1.57159-9.1631L.685209 9.67376 9.8855 8.33688 14 0l4.1145 8.33688 9.2003 1.33688-6.6574 6.48934 1.5716 9.1631L14 21z"/>
+        </svg>
+      </label>
+
+      <button class="event__rollup-btn" type="button">
+        <span class="visually-hidden">Open event</span>
+      </button>
     </header>
     <section class="event__details">
       <section class="event__section  event__section--offers">
@@ -116,37 +130,47 @@ export const createEventFormTemplate = (point: Point) => {
 
 export default class EventFormView extends View {
   private listeners: EventListener[] = [];
+  private changedPoint: Point
 
-  constructor(private point: Point) {
+  constructor(private point: Point, private onChangeListener: Function = () => {}) {
     super()
-    this.onSubmit = this.onSubmit.bind(this);
+    this.changedPoint = Object.assign({}, point)
+    this.onSubmit = this.onSubmit.bind(this)
+    this.onFavoriteChange = this.onFavoriteChange.bind(this)
   }
 
   protected getTemplate() {
     return createEventFormTemplate(this.point)
   }
 
-  getElement() {
-    if (!this.element) {
-      this.element = createElement(this.getTemplate())
-      this.element?.addEventListener('submit', this.onSubmit)
-    }
-    return this.element
-  }
-
-  removeElement() {
-    this.element?.removeEventListener('submit', this.onSubmit)
-    this.element = null
-  }
-
   addSubmitListener(fn: EventListener) {
-    this.listeners.push(fn);
+    this.listeners.push(fn)
   }
 
   private onSubmit(evt: Event) {
     evt.preventDefault();
     for (const fn of this.listeners) {
-      fn(evt);
+      fn(evt)
     }
+  }
+
+  private onFavoriteChange(evt: Event) {
+    const element = <HTMLInputElement>evt.target;
+    const newPoint = Object.assign({}, this.point, {isFavorite: element.checked })
+    this.onChangeListener(newPoint)
+  }
+
+  protected addListeners() {
+    this.element?.addEventListener('submit', this.onSubmit)
+    this.element?.querySelector('.event__favorite-checkbox')?.addEventListener('change', this.onFavoriteChange)
+  }
+
+  protected removeListeners() {
+    this.element?.removeEventListener('submit', this.onSubmit)
+    this.element?.querySelector('.event__favorite-checkbox')?.removeEventListener('change', this.onFavoriteChange)
+  }
+
+  update(newPoint: Point) {
+
   }
 }

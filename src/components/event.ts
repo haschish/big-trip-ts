@@ -99,4 +99,8 @@ export default class EventView extends View {
       fn(evt)
     }
   }
+
+  update(newPoint: Point) {
+
+  }
 }

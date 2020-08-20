@@ -8,9 +8,9 @@ export default class PointPresenter {
   private eventView: EventView
   private eventFormView: EventFormView
 
-  constructor(private container: View | Element, private point: Point) {
+  constructor(private container: View | Element, private point: Point, onUpdatePoint?: Function) {
     this.eventView = new EventView(this.point)
-    this.eventFormView = new EventFormView(this.point)
+    this.eventFormView = new EventFormView(this.point, onUpdatePoint)
 
     this.eventView.addClickRollUpListener(() => {
       this.replaceEventToForm()
@@ -45,7 +45,8 @@ export default class PointPresenter {
     render(this.container, this.eventView)
   }
 
-  update() {
-
+  update(newPoint: Point) {
+    this.eventView.update(newPoint)
+    this.eventFormView.update(newPoint)
   }
 }

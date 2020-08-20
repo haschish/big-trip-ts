@@ -68,6 +68,8 @@ const generateDate = (date: Date = new Date(), duration: number = 0) => {
   return result;
 }
 
+const generateId = () => Date.now().toString(32)
+
 export type Offer = {
   title: string,
   price: number,
@@ -80,6 +82,7 @@ export type Description = {
 }
 
 export type Point = {
+  id: string,
   type: string,
   destination: string,
   offers: Offer[],
@@ -87,6 +90,7 @@ export type Point = {
   price: number,
   timeStart: Date,
   timeEnd: Date
+  isFavorite: boolean
 }
 
 export type Total = {
@@ -97,6 +101,7 @@ export type Total = {
 }
 
 const generatePoint = (timeStart: Date, timeEnd: Date): Point => ({
+  id: generateId(),
   type: getRandomElement(types),
   destination: getRandomElement(cities),
   offers: generateOffers(getRandomInt(5)),
@@ -106,7 +111,8 @@ const generatePoint = (timeStart: Date, timeEnd: Date): Point => ({
   },
   price: getRandomInt(20, 100),
   timeStart,
-  timeEnd
+  timeEnd,
+  isFavorite: Boolean(getRandomInt(0, 1))
 })
 
 export const generate = (num: number): Point[] => {
