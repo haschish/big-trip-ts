@@ -1,6 +1,6 @@
-import {Point, getPrepositionForType, transferTypes, activityTypes, Offer} from '../data'
+import {Point, getPrepositionForType, transferTypes, activityTypes, Offer, Description} from '../data'
 import {upperFirst, formatDatetime, getChecked, createElement} from '../util'
-import View from './view'
+import SmartView from './smart-view'
 
 const getTypeList = (list: string[], type: string) => {
   return list.map((it) => `
@@ -30,6 +30,25 @@ const getPhotosTemplate = (photos: string[]): string => {
   return photos.map(it => `
     <img class="event__photo" src="${it}" alt="Event photo">
   `).join('')
+}
+
+const getDestinationSection = (data?: Description) => {
+  if (!data) {
+    return ''
+  }
+
+  return `
+  <section class="event__section  event__section--destination">
+    <h3 class="event__section-title  event__section-title--destination">Destination</h3>
+    <p class="event__destination-description">${data.text}</p>
+
+    <div class="event__photos-container">
+      <div class="event__photos-tape">
+        ${getPhotosTemplate(data.pictures)}
+      </div>
+    </div>
+  </section>
+  `
 }
 
 export const createEventFormTemplate = (point: Point) => {
@@ -93,7 +112,7 @@ export const createEventFormTemplate = (point: Point) => {
       <button class="event__save-btn  btn  btn--blue" type="submit">Save</button>
       <button class="event__reset-btn" type="reset">Cancel</button>
 
-      <input id="event-favorite-1" class="event__favorite-checkbox  visually-hidden" type="checkbox" name="event-favorite" checked>
+      <input id="event-favorite-1" class="event__favorite-checkbox  visually-hidden" type="checkbox" name="event-favorite" ${getChecked(point.isFavorite)}>
       <label class="event__favorite-btn" for="event-favorite-1">
         <span class="visually-hidden">Add to favorite</span>
         <svg class="event__favorite-icon" width="28" height="28" viewBox="0 0 28 28">
@@ -114,29 +133,32 @@ export const createEventFormTemplate = (point: Point) => {
           ${getOffersTemplate(point.offers)}
         </div>
       </section>
-      <section class="event__section  event__section--destination">
-        <h3 class="event__section-title  event__section-title--destination">Destination</h3>
-        <p class="event__destination-description">${point.description.text}</p>
-
-        <div class="event__photos-container">
-          <div class="event__photos-tape">
-            ${getPhotosTemplate(point.description.pictures)}
-          </div>
-        </div>
-      </section>
+      ${getDestinationSection(point.description)}
     </section>
   </form>`
 }
 
-export default class EventFormView extends View {
+export default class EventFormView extends SmartView {
+
   private listeners: EventListener[] = [];
   private changedPoint: Point
 
-  constructor(private point: Point, private onChangeListener: Function = () => {}) {
+  constructor(private point: Point, private onUpdate: Function = () => {}, private onChange: Function = () => {}) {
     super()
     this.changedPoint = Object.assign({}, point)
     this.onSubmit = this.onSubmit.bind(this)
     this.onFavoriteChange = this.onFavoriteChange.bind(this)
+    this.onTypeChange = this.onTypeChange.bind(this)
+    this.onDestinationChange = this.onDestinationChange.bind(this)
+  }
+
+  protected restoreHadlers() {
+    this.element?.addEventListener('submit', this.onSubmit)
+    this.element?.querySelector('.event__favorite-checkbox')?.addEventListener('change', this.onFavoriteChange)
+    this.element?.querySelector('.event__input--destination')!.addEventListener('change', this.onDestinationChange)
+    this.element?.querySelectorAll('.event__type-group').forEach((it) => {
+      it.addEventListener('change', this.onTypeChange)
+    })
   }
 
   protected getTemplate() {
@@ -157,20 +179,24 @@ export default class EventFormView extends View {
   private onFavoriteChange(evt: Event) {
     const element = <HTMLInputElement>evt.target;
     const newPoint = Object.assign({}, this.point, {isFavorite: element.checked })
-    this.onChangeListener(newPoint)
+    this.onUpdate(newPoint)
   }
 
-  protected addListeners() {
-    this.element?.addEventListener('submit', this.onSubmit)
-    this.element?.querySelector('.event__favorite-checkbox')?.addEventListener('change', this.onFavoriteChange)
+  private onTypeChange(evt: Event) {
+    const element = <HTMLInputElement>evt.target;
+    const newPoint = Object.assign({}, this.point, {type: element.value })
+    this.onChange(newPoint)
   }
 
-  protected removeListeners() {
-    this.element?.removeEventListener('submit', this.onSubmit)
-    this.element?.querySelector('.event__favorite-checkbox')?.removeEventListener('change', this.onFavoriteChange)
+  private onDestinationChange(evt: Event) {
+    const element = <HTMLInputElement>evt.target;
+    const newPoint = Object.assign({}, this.point, {destination: element.value })
+    this.onChange(newPoint)
   }
 
   update(newPoint: Point) {
-
+    this.point = newPoint
+    this.changedPoint = Object.assign({}, newPoint)
+    this.updateElement()
   }
 }

@@ -11,7 +11,7 @@ export const formatDatetime = (date: Date) => {
   return `${day}/${month}/${year} ${hours}:${minutes}`
 }
 
-export const getChecked = (value: boolean) => value ? 'checked' : '';
+export const getChecked = (value?: boolean) => value ? 'checked' : ''
 
 export const render = (container: Element | View, view: View, place: InsertPosition = `beforeend` ) => {
   if (container instanceof View) {

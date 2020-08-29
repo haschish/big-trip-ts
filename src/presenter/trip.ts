@@ -1,4 +1,4 @@
-import {Point} from '../data'
+import {Point, Offer, Description} from '../data'
 import PointPresenter from './point'
 import Sort, {SortType} from '../components/sort'
 import Days from '../components/days'
@@ -8,6 +8,8 @@ import {render} from '../util'
 
 export default class Trip {
   private data: Point[] = []
+  private offers: Offer[] = []
+  private descriptions: Map<string, Description> = new Map()
   private sortView: Sort = new Sort()
   private daysView: Days = new Days()
   private pointPreseters: Map<string, PointPresenter> = new Map()
@@ -15,6 +17,8 @@ export default class Trip {
 	constructor(private container: Element) {
     this.onSortChange = this.onSortChange.bind(this)
     this.onUpdatePoint = this.onUpdatePoint.bind(this)
+    this.onChangePoint = this.onChangePoint.bind(this)
+    this.onPointStartEdit = this.onPointStartEdit.bind(this)
     this.sortView.addChangeListener(this.onSortChange)
   }
 
@@ -22,8 +26,10 @@ export default class Trip {
     this.update()
   }
 
-  init(data: Point[]) {
+  init(data: Point[], offers: Offer[], descriptions: Map<string, Description>) {
     this.data = data.slice()
+    this.offers = offers
+    this.descriptions = descriptions
 
     this.update()
   }
@@ -86,8 +92,9 @@ export default class Trip {
 
   private renderPoint(dayView: Day, point: Point) {
     const eventsListElement = dayView.getEventsList()
-    const pp = new PointPresenter(eventsListElement!, point, this.onUpdatePoint)
+    const pp = new PointPresenter(eventsListElement!, point, this.onUpdatePoint, this.onChangePoint)
     pp.render()
+    pp.addEventListener('startEdit', this.onPointStartEdit)
     this.pointPreseters.set(point.id, pp)
   }
 
@@ -96,5 +103,22 @@ export default class Trip {
 
     this.data = [...this.data.slice(0, index), newPoint, ...this.data.slice(index + 1)]
     this.pointPreseters.get(newPoint.id)?.update(newPoint)
+  }
+
+  private onChangePoint(newPoint: Point) {
+    const index = this.data.findIndex((point) => point.id === newPoint.id)
+    const oldPoint = this.data[index]
+    if (newPoint.type !== oldPoint.type) {
+      newPoint.offers = this.offers.filter((it) => it.type === newPoint.type)
+    }
+
+    if (newPoint.destination !== oldPoint.destination) {
+      newPoint.description = this.descriptions.get(newPoint.destination)
+    }
+    this.pointPreseters.get(newPoint.id)?.updateFormOnly(newPoint)
+  }
+
+  private onPointStartEdit() {
+    this.pointPreseters.forEach(pp => pp.resetView())
   }
 }

@@ -5,9 +5,13 @@ export default abstract class View {
 
   protected abstract getTemplate(): string
 
+  protected createElement() {
+    this.element = createElement(this.getTemplate())
+  }
+
   getElement() {
     if (!this.element) {
-      this.element = createElement(this.getTemplate())
+      this.createElement()
       this.addListeners()
     }
     return this.element

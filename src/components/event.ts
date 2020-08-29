@@ -1,6 +1,6 @@
 import {Point, Offer, getPrepositionForType} from '../data';
 import {upperFirst, createElement} from '../util'
-import View from './view'
+import SmartView from './smart-view'
 
 const getTitle = (point: Point): string => {
   const preposition = getPrepositionForType(point.type)
@@ -65,7 +65,7 @@ const createEventTemplate = (point: Point) => {
   </li>`
 }
 
-export default class EventView extends View {
+export default class EventView extends SmartView {
   private listeners: EventListener[] = []
 
   constructor(private point: Point) {
@@ -77,17 +77,8 @@ export default class EventView extends View {
     return createEventTemplate(this.point)
   }
 
-  getElement() {
-    if (!this.element) {
-      this.element = createElement(this.getTemplate())
-      this.element?.querySelector('.event__rollup-btn')?.addEventListener('click', this.onClickRollUp)
-    }
-    return this.element
-  }
-
-  removeElement() {
-    this.element?.querySelector('.event__rollup-btn')?.removeEventListener('click', this.onClickRollUp)
-    this.element = null
+  protected restoreHadlers() {
+    this.element?.querySelector('.event__rollup-btn')?.addEventListener('click', this.onClickRollUp)
   }
 
   addClickRollUpListener(fn: EventListener) {
@@ -101,6 +92,7 @@ export default class EventView extends View {
   }
 
   update(newPoint: Point) {
-
+    this.point = newPoint
+    this.updateElement()
   }
 }
