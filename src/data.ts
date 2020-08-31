@@ -140,7 +140,7 @@ export const generateEvents = (num: number): Point[] => {
 
     arr.push(generatePoint(startDate, stopDate))
     startDate = generateDate(stopDate, getRandomInt(200, 300))
-    stopDate = generateDate(startDate, getRandomInt(30, 60))
+    stopDate = generateDate(startDate, getRandomInt(30, 2000))
   }
   return arr;
 }

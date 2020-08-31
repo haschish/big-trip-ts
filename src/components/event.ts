@@ -1,6 +1,7 @@
 import {Point, Offer, getPrepositionForType} from '../data';
-import {upperFirst, createElement} from '../util'
+import {upperFirst} from '../util'
 import SmartView from './smart-view'
+import moment from 'moment'
 
 const getTitle = (point: Point): string => {
   const preposition = getPrepositionForType(point.type)
@@ -13,10 +14,14 @@ const getTime = (date: Date): string => {
 }
 
 const getDurationTime = (timeStart: Date, timeEnd: Date): string => {
-  const duration = timeEnd.getTime() - timeStart.getTime()
-  const seconds = duration / 1000
-  const minutes = Math.floor(seconds / 60);
-  return `${minutes}M`;
+  const diff = moment(timeEnd).diff(timeStart);
+  const duration = moment.duration(diff);
+
+  const days = duration.days() ? `${duration.days()}D ` : '';
+  const hours = duration.hours() ? `${duration.hours()}H ` : '';
+  const minutes = duration.minutes() ? `${duration.minutes()}M` : '';
+
+  return `${days}${hours}${minutes}`;
 }
 
 const getOffersTemplate = (offers: Offer[]): string => {
