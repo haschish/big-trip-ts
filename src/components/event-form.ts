@@ -1,6 +1,9 @@
 import {Point, getPrepositionForType, transferTypes, activityTypes, Offer, Description} from '../data'
 import {upperFirst, formatDatetime, getChecked, createElement} from '../util'
 import SmartView from './smart-view'
+import flatpickr from 'flatpickr'
+
+import '../../node_modules/flatpickr/dist/flatpickr.min.css'
 
 const getTypeList = (list: string[], type: string) => {
   return list.map((it) => `
@@ -142,6 +145,7 @@ export default class EventFormView extends SmartView {
 
   private listeners: EventListener[] = [];
   private changedPoint: Point
+  private flatpickrs: Map<string, flatpickr.Instance> = new Map()
 
   constructor(private point: Point, private onUpdate: Function = () => {}, private onChange: Function = () => {}) {
     super()
@@ -150,6 +154,7 @@ export default class EventFormView extends SmartView {
     this.onFavoriteChange = this.onFavoriteChange.bind(this)
     this.onTypeChange = this.onTypeChange.bind(this)
     this.onDestinationChange = this.onDestinationChange.bind(this)
+    this.onFlatpickrChange = this.onFlatpickrChange.bind(this)
   }
 
   protected restoreHadlers() {
@@ -159,10 +164,62 @@ export default class EventFormView extends SmartView {
     this.element?.querySelectorAll('.event__type-group').forEach((it) => {
       it.addEventListener('change', this.onTypeChange)
     })
+    this.setFlatpickr()
   }
 
   protected getTemplate() {
     return createEventFormTemplate(this.point)
+  }
+
+  removeElement() {
+    this.element = null
+    this.clearFlatpickrs()
+  }
+
+  private clearFlatpickrs() {
+    if (this.flatpickrs.size > 0) {
+      this.flatpickrs.forEach((it) => {
+        it.destroy();
+      });
+
+      this.flatpickrs = new Map();
+    }
+  }
+
+  private setFlatpickr() {
+    this.clearFlatpickrs()
+
+    const inputs = this.getElement()!.querySelectorAll(`.event__input--time`);
+
+    [...inputs].forEach((input) => {
+      const element = <HTMLInputElement>input
+      const date = element.name === `event-start-time` ? this.point.timeStart : this.point.timeEnd;
+      const limit = element.name === `event-start-time` ? {maxDate: this.point.timeEnd} : {minDate: this.point.timeStart};
+
+      const fp = flatpickr(element, Object.assign({
+        altInput: true,
+        altFormat: `d/m/y H:i`,
+        allowInput: true,
+        enableTime: true,
+        // eslint-disable-next-line camelcase
+        time_24hr: true,
+        defaultDate: date,
+        onChange: this.onFlatpickrChange
+      }, limit))
+      this.flatpickrs.set(element.name, fp)
+    })
+  }
+
+
+  private onFlatpickrChange(dates: Date[], str: string, picker: flatpickr.Instance ) {
+    const [date] = dates
+    if ((<HTMLInputElement>picker.element).name === `event-start-time`) {
+      const fpEnd = this.flatpickrs.get('event-end-time')
+      fpEnd?.set(`minDate`, date)
+    } else {
+      const fpStart = this.flatpickrs.get('event-start-time')
+      fpStart?.set(`maxDate`, date)
+    }
   }
 
   addSubmitListener(fn: EventListener) {
