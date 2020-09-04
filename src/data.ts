@@ -164,3 +164,11 @@ const offers = generateOffers()
 export const getOffers = () => {
   return offers
 }
+
+export enum Actions {
+  Add = 'add',
+  Delete = 'delete',
+  Save = 'update',
+  OpenPoint = 'open-point',
+  Change = 'change'
+}

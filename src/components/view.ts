@@ -1,6 +1,6 @@
 import {createElement} from '../util'
 
-export default abstract class View {
+export default abstract class View extends EventTarget {
   protected element: Element | null = null
 
   protected abstract getTemplate(): string

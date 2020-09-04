@@ -1,4 +1,5 @@
-import View from './view'
+import SmartView from './smart-view'
+import {getChecked} from '../util'
 
 export enum SortType {
   Event = 'sort-event',
@@ -6,17 +7,19 @@ export enum SortType {
   Price = 'sort-price'
 }
 
-const createSortTemplate = () => `
+const createSortTemplate = (currectSort: string) => {
+
+  return `
   <form class="trip-events__trip-sort  trip-sort" action="#" method="get">
     <span class="trip-sort__item  trip-sort__item--day">Day</span>
 
     <div class="trip-sort__item  trip-sort__item--event">
-      <input id="sort-event" class="trip-sort__input  visually-hidden" type="radio" name="trip-sort" value="${SortType.Event}" checked>
+      <input id="sort-event" class="trip-sort__input  visually-hidden" type="radio" name="trip-sort" value="${SortType.Event}" ${getChecked(currectSort === SortType.Event)}>
       <label class="trip-sort__btn" for="sort-event">Event</label>
     </div>
 
     <div class="trip-sort__item  trip-sort__item--time">
-      <input id="sort-time" class="trip-sort__input  visually-hidden" type="radio" name="trip-sort" value="${SortType.Time}">
+      <input id="sort-time" class="trip-sort__input  visually-hidden" type="radio" name="trip-sort" value="${SortType.Time}" ${getChecked(currectSort === SortType.Time)}>
       <label class="trip-sort__btn" for="sort-time">
         Time
         <svg class="trip-sort__direction-icon" width="8" height="10" viewBox="0 0 8 10">
@@ -26,7 +29,7 @@ const createSortTemplate = () => `
     </div>
 
     <div class="trip-sort__item  trip-sort__item--price">
-      <input id="sort-price" class="trip-sort__input  visually-hidden" type="radio" name="trip-sort" value="${SortType.Price}">
+      <input id="sort-price" class="trip-sort__input  visually-hidden" type="radio" name="trip-sort" value="${SortType.Price}" ${getChecked(currectSort === SortType.Price)}>
       <label class="trip-sort__btn" for="sort-price">
         Price
         <svg class="trip-sort__direction-icon" width="8" height="10" viewBox="0 0 8 10">
@@ -37,36 +40,24 @@ const createSortTemplate = () => `
 
     <span class="trip-sort__item  trip-sort__item--offers">Offers</span>
   </form>`
+}
 
-export default class Sort extends View {
-  private listeners: Function[] = []
-
-  constructor () {
+export default class Sort extends SmartView {
+  constructor (private sort: string) {
     super()
     this.onChange = this.onChange.bind(this)
   }
 
   protected getTemplate() {
-    return createSortTemplate()
+    return createSortTemplate(this.sort)
   }
 
-  protected addListeners() {
+  protected restoreHadlers() {
     this.element!.addEventListener('change', this.onChange)
   }
 
-  protected removeListeners() {
-    this.element!.removeEventListener('change', this.onChange)
-  }
-
   private onChange(evt: Event) {
-    const element = <HTMLInputElement>evt.target
-    for (const fn of this.listeners) {
-      fn(element.value)
-    }
-  }
-
-  addChangeListener(fn: Function) {
-    this.listeners.push(fn)
+    this.dispatchEvent(new Event('change'))
   }
 
   getSelected() {
@@ -74,5 +65,10 @@ export default class Sort extends View {
       return (<HTMLInputElement>this.element!.querySelector('input:checked')).value
     }
     return null
+  }
+
+  update(value: string) {
+    this.sort = value
+    this.updateElement()
   }
 }

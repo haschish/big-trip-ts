@@ -1,33 +1,41 @@
-import {Point, Offer, Description} from '../data'
+import {Point, Offer, Description, Actions} from '../data'
 import PointPresenter from './point'
 import Sort, {SortType} from '../components/sort'
+import {FilterType} from '../components/filter'
 import Days from '../components/days'
 import Day from '../components/day'
 import NoEvents from '../components/no-events'
 import {render} from '../util'
+import PointsModel from '../model/points'
+import FilterModel from '../model/filter'
 
 export default class Trip {
-  private data: Point[] = []
   private offers: Offer[] = []
   private descriptions: Map<string, Description> = new Map()
-  private sortView: Sort = new Sort()
+  private sortView: Sort
   private daysView: Days = new Days()
   private pointPreseters: Map<string, PointPresenter> = new Map()
+  private sort: string = SortType.Event
 
-	constructor(private container: Element) {
+	constructor(private container: Element, private model: PointsModel, private filterModel: FilterModel) {
+    this.sortView = new Sort(this.sort)
     this.onSortChange = this.onSortChange.bind(this)
     this.onUpdatePoint = this.onUpdatePoint.bind(this)
     this.onChangePoint = this.onChangePoint.bind(this)
     this.onPointStartEdit = this.onPointStartEdit.bind(this)
-    this.sortView.addChangeListener(this.onSortChange)
+    this.onFilterChange = this.onFilterChange.bind(this)
+
+    this.sortView.addEventListener('change', this.onSortChange)
+    this.filterModel.addEventListener('change', this.onFilterChange)
   }
 
   private onSortChange() {
+    this.sort = this.sortView.getSelected()!
+    console.log(this.sort)
     this.update()
   }
 
-  init(data: Point[], offers: Offer[], descriptions: Map<string, Description>) {
-    this.data = data.slice()
+  init(offers: Offer[], descriptions: Map<string, Description>) {
     this.offers = offers
     this.descriptions = descriptions
 
@@ -36,45 +44,47 @@ export default class Trip {
 
   private update() {
     this.container.innerHTML = ''
-    if (this.data.length > 0) {
+    const data = this.getFilteredData()
+    if (data.length > 0) {
       render(this.container, this.sortView)
       render(this.container, this.daysView)
       this.daysView.clear()
-
-      const sortType = this.sortView.getSelected() || SortType.Event
-      this.sortData(sortType)
-      this.renderPoints(sortType)
+      this.model.sort(this.sort)
+      this.renderPoints(data)
     } else {
       this.renderNoPoints()
     }
   }
 
-  private sortData(type: string) {
-    switch (type) {
-      case SortType.Event:
-        this.data.sort((a, b) => a.timeStart.getTime() - b.timeStart.getTime())
+  private getFilteredData() {
+    let fn = (it: Point) => true
+    const now = Date.now()
+    switch(this.filterModel.get()) {
+      case FilterType.Everything:
+        fn = () => true
         break
-      case SortType.Time:
-        this.data.sort((a, b) => (b.timeEnd.getTime() - b.timeStart.getTime()) - (a.timeEnd.getTime() - a.timeStart.getTime()))
+      case FilterType.Future:
+        fn = (it) => it.timeStart.getTime() > now
         break
-      case SortType.Price:
-        this.data.sort((a, b) => b.price - a.price)
+      case FilterType.Past:
+        fn = (it) => it.timeEnd.getTime() < now
         break
     }
+    return this.model.getData().filter(fn)
   }
 
-  private renderPoints(type: string) {
+  private renderPoints(data: Point[]) {
     let dayView: Day = new Day();
 
-    if (type !== SortType.Event) {
+    if (this.sort !== SortType.Event) {
       render(this.daysView, dayView)
-      for (const point of this.data) {
+      for (const point of data) {
         this.renderPoint(dayView, point);
       }
     } else {
       let prevPoint: Point | null = null
       let counterDay = 0
-      for (const point of this.data) {
+      for (const point of data) {
         if (prevPoint === null || point.timeStart.getDate() !== prevPoint.timeStart.getDate()) {
           counterDay += 1
           dayView = new Day(counterDay, point.timeStart)
@@ -99,15 +109,20 @@ export default class Trip {
   }
 
   private onUpdatePoint(newPoint: Point) {
-    const index = this.data.findIndex((point) => point.id === newPoint.id)
+    this.model.update(newPoint)
+  }
 
-    this.data = [...this.data.slice(0, index), newPoint, ...this.data.slice(index + 1)]
-    this.pointPreseters.get(newPoint.id)?.update(newPoint)
+  private onPointAction(type: Actions, payload?: any) {
+    switch (type) {
+      case Actions.Delete:
+        this.model.remove(payload)
+        break
+    }
   }
 
   private onChangePoint(newPoint: Point) {
-    const index = this.data.findIndex((point) => point.id === newPoint.id)
-    const oldPoint = this.data[index]
+    const index = this.model.getData().findIndex((point) => point.id === newPoint.id)
+    const oldPoint = this.model.getData()[index]
     if (newPoint.type !== oldPoint.type) {
       newPoint.offers = this.offers.filter((it) => it.type === newPoint.type)
     }
@@ -120,5 +135,11 @@ export default class Trip {
 
   private onPointStartEdit() {
     this.pointPreseters.forEach(pp => pp.resetView())
+  }
+
+  private onFilterChange() {
+    this.sort = SortType.Event
+    this.sortView.update(this.sort)
+    this.update()
   }
 }
